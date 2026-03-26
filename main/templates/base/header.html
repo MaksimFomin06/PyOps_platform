@@ -1,0 +1,21 @@
+{% load static %}
+<div class="main-header">
+  {% comment %} {% if user.is_authenticated %}
+    {% endcomment %}
+    <div class="header-links">
+      <a href="{% url 'main:home' %}">Главная</a>
+    </div>
+    {% comment %}
+  {% endif %} {% endcomment %}
+  {% comment %} <div class="header-auth">
+    {% if user.is_authenticated %}
+      <span class="user-info">Профиль: <strong>{{ user.get_full_name|default:user.username }}</strong></span>
+      <form method="post" action="{% url 'logout' %}" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">Выйти</button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}" class="btn-login">Войти</a>
+    {% endif %}
+  </div> {% endcomment %}
+</div>

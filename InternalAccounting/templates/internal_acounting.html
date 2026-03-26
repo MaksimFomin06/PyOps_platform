@@ -1,0 +1,353 @@
+{% extends 'base/base.html' %}
+{% block title %}Список студентов{% endblock %}
+
+{% block content %}
+<h1>Список студентов</h1>
+
+{% if unregistered_refunds %}
+  <div class="alert alert-warning unregistered-refund-alert">
+    <strong>⚠️ Незарегистрированные возвраты:</strong>
+    <ul>
+      {% for item in unregistered_refunds %}
+        <li>Ведомость <strong>{{ item.statement_number }}</strong> — {{ item.fio }} — <em>{{ item.comment|truncatewords:10 }}</em></li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'InternalAccounting:refund_add' %}" class="btn-refund-small">Зарегистрировать возврат</a>
+  </div>
+{% endif %}
+
+<!-- === Год (всегда виден) === -->
+<div class="controls-year">
+  <strong>Год:</strong>
+  <a href="?year=all{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-year {% if current_year == 'all' %}btn-year-active{% endif %}">Все</a>
+  {% for y in all_years %}
+    <a href="?year={{ y }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-year {% if current_year == y|stringformat:'s' %}btn-year-active{% endif %}">{{ y }}</a>
+  {% endfor %}
+</div>
+
+<!-- === Кнопка управления фильтрами === -->
+<button id="toggle-filters" class="btn-toggle-filters">
+  {% if show_filters %}Скрыть фильтры ▲{% else %}Показать фильтры ▼{% endif %}
+</button>
+
+<!-- === Расширенные фильтры (скрываемые) === -->
+<div id="advanced-filters" class="advanced-filters {% if not show_filters %}hidden{% endif %}">
+  <form method="get" id="filters-form">
+    <!-- Скрыто: сохраняем текущие параметры, кроме фильтров -->
+    {% if current_year != 'all' %}
+      <input type="hidden" name="year" value="{{ current_year }}">
+    {% endif %}
+    {% if current_sort %}
+      <input type="hidden" name="sort" value="{{ current_sort }}">
+    {% endif %}
+
+    <!-- Школа -->
+    <div class="filter-group">
+      <strong>Школа:</strong>
+      <label><input type="radio" name="school" value="" {% if not current_school %}checked{% endif %}> Все</label>
+      <label><input type="radio" name="school" value="НУР" {% if current_school == 'НУР' %}checked{% endif %}> НУР</label>
+      <label><input type="radio" name="school" value="ДВИЖ" {% if current_school == 'ДВИЖ' %}checked{% endif %}> ДВИЖ</label>
+    </div>
+
+    <!-- Статус -->
+    <div class="filter-group">
+      <strong>Статус:</strong>
+      <label><input type="radio" name="status" value="" {% if not current_status %}checked{% endif %}> Все</label>
+      <label><input type="radio" name="status" value="in_office" {% if current_status == 'in_office' %}checked{% endif %}> В офисе</label>
+      <label><input type="radio" name="status" value="frozen" {% if current_status == 'frozen' %}checked{% endif %}> Заморожен</label>
+      <label><input type="radio" name="status" value="individual" {% if current_status == 'individual' %}checked{% endif %}> Индивидуальный</label>
+      <label><input type="radio" name="status" value="refund" {% if current_status == 'refund' %}checked{% endif %}> Возврат</label>
+    </div>
+
+    <!-- Услуга -->
+<div class="filter-group">
+  <strong>Услуга:</strong>
+  <select name="desired_service" class="form-select" style="width: auto; display: inline-block; padding: 4px; margin-left: 10px;">
+    <option value="">Все</option>
+    {% for value, label in desired_service_choices %}
+      <option value="{{ value }}" {% if current_desired_service == value %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+    <!-- Числовые фильтры -->
+    <div class="filter-group numeric-filters">
+      <strong>Часы всего:</strong>
+      от <input type="number" name="total_hours_min" value="{{ current_total_hours_min }}" min="0" style="width: 80px; padding: 4px;">
+      до <input type="number" name="total_hours_max" value="{{ current_total_hours_max }}" min="0" style="width: 80px; padding: 4px;">
+    </div>
+
+    <div class="filter-group numeric-filters">
+      <strong>Часы откат-ые:</strong>
+      от <input type="number" name="rolled_min" value="{{ current_rolled_min }}" min="0" style="width: 80px; padding: 4px;">
+      до <input type="number" name="rolled_max" value="{{ current_rolled_max }}" min="0" style="width: 80px; padding: 4px;">
+    </div>
+
+    <div class="filter-group numeric-filters">
+      <strong>Часы остаток:</strong>
+      от <input type="number" name="remaining_min" value="{{ current_remaining_min }}" min="0" style="width: 80px; padding: 4px;">
+      до <input type="number" name="remaining_max" value="{{ current_remaining_max }}" min="0" style="width: 80px; padding: 4px;">
+    </div>
+
+    <div class="filter-group numeric-filters">
+      <strong>Сумма платежа:</strong>
+      от <input type="number" name="sum_min" value="{{ current_sum_min }}" min="0" style="width: 80px; padding: 4px;">
+      до <input type="number" name="sum_max" value="{{ current_sum_max }}" min="0" style="width: 80px; padding: 4px;">
+    </div>
+
+    <!-- Дата покупки -->
+    <div class="filter-group">
+      <strong>Дата покупки:</strong>
+      с <input type="date" name="buyback_from" value="{{ current_buyback_from }}" style="padding: 4px;">
+      по <input type="date" name="buyback_to" value="{{ current_buyback_to }}" style="padding: 4px;">
+    </div>
+
+    <!-- Булевы фильтры -->
+    <div class="filter-group">
+      <strong>Документы:</strong>
+      <label><input type="radio" name="documents" value="" {% if current_documents == None %}checked{% endif %}> Все</label>
+      <label><input type="radio" name="documents" value="true" {% if current_documents == "true" %}checked{% endif %}> Есть</label>
+      <label><input type="radio" name="documents" value="false" {% if current_documents == "false" %}checked{% endif %}> Нет</label>
+    </div>
+
+    <div class="filter-group">
+      <strong>ВНУ ЭКЗ:</strong>
+      <label><input type="radio" name="internal_exam" value="" {% if current_internal_exam == None %}checked{% endif %}> Все</label>
+      <label><input type="radio" name="internal_exam" value="true" {% if current_internal_exam == "true" %}checked{% endif %}> Сдал</label>
+      <label><input type="radio" name="internal_exam" value="false" {% if current_internal_exam == "false" %}checked{% endif %}> Не сдал</label>
+    </div>
+
+    <div class="filter-group">
+      <strong>ЭКЗАМЕН (ГАИ):</strong>
+      <label><input type="radio" name="gai_exam" value="" {% if current_gai_exam == None %}checked{% endif %}> Все</label>
+      <label><input type="radio" name="gai_exam" value="true" {% if current_gai_exam == "true" %}checked{% endif %}> Сдал</label>
+      <label><input type="radio" name="gai_exam" value="false" {% if current_gai_exam == "false" %}checked{% endif %}> Не сдал</label>
+    </div>
+
+    <button type="submit" class="btn-apply">Применить фильтры</button>
+    <a href="{% url 'InternalAccounting:student_list' %}?year={{ current_year }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-clear-inline">Сбросить</a>
+  </form>
+</div>
+
+<!-- === Кнопки действий === -->
+<div class="action-buttons">
+  <a href="{% url 'InternalAccounting:export_students_excel' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn-excel">Скачать Excel</a>
+  <a href="{% url 'InternalAccounting:add_student' %}" class="btn-add">Добавить студента</a>
+  <a href="{% url 'InternalAccounting:import_students' %}" class="btn-add">Импортировать</a>
+  <a href="{% url 'InternalAccounting:refund_add' %}" class="btn-refund">Добавить возврат</a>
+</div>
+
+<!-- === Таблица (без изменений) === -->
+<div class="table-wrapper">
+  <table class="excel-table">
+    <thead>
+      <tr>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'statement_number' %}-statement_number{% elif current_sort == '-statement_number' %}statement_number{% else %}statement_number{% endif %}">№</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'fio' %}-fio{% elif current_sort == '-fio' %}fio{% else %}fio{% endif %}">ФИО</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'course_name' %}-course_name{% elif current_sort == '-course_name' %}course_name{% else %}course_name{% endif %}">Курс</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'total_hours' %}-total_hours{% elif current_sort == '-total_hours' %}total_hours{% else %}total_hours{% endif %}">Часы всего</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'rolled_back_hours' %}-rolled_back_hours{% elif current_sort == '-rolled_back_hours' %}rolled_back_hours{% else %}rolled_back_hours{% endif %}">Часы откат-ые</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'remaining_hours' %}-remaining_hours{% elif current_sort == '-remaining_hours' %}remaining_hours{% else %}remaining_hours{% endif %}">Часы остаток</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'date_of_buyback' %}-date_of_buyback{% elif current_sort == '-date_of_buyback' %}date_of_buyback{% else %}date_of_buyback{% endif %}">Дата покупки</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'phone_number' %}-phone_number{% elif current_sort == '-phone_number' %}phone_number{% else %}phone_number{% endif %}">Номер телефона</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'comment_for_payback' %}-comment_for_payback{% elif current_sort == '-comment_for_payback' %}comment_for_payback{% else %}comment_for_payback{% endif %}">Комментарии по оплате</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'summ_of_payback' %}-summ_of_payback{% elif current_sort == '-summ_of_payback' %}summ_of_payback{% else %}summ_of_payback{% endif %}">Сумма платежа</a></th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'school_name' %}-school_name{% elif current_sort == '-school_name' %}school_name{% else %}school_name{% endif %}">ШКОЛА</a></th>
+        <th>ДОКУМЕНТЫ</th>
+        <th>ВНУ ЭКЗ</th>
+        <th>ЭКЗАМЕН</th>
+        <th>Свидетельство передали Дата/комментарий</th>
+        <th><a href="?{% for k,v in request.GET.items %}{% if k != 'sort' %}{{k}}={{v}}&{% endif %}{% endfor %}sort={% if current_sort == 'first_visit_date' %}-first_visit_date{% elif current_sort == '-first_visit_date' %}first_visit_date{% else %}first_visit_date{% endif %}">Первое посещение</a></th>
+        <th>Действия</th>
+        <th>В офисе</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in students_with_flags %}
+        <tr>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_section %}bg-light-green{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.statement_number }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.fio }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.course_name }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.total_hours|default:'—' }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_in_office %}bg-lilac{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.rolled_back_hours }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.remaining_hours|default:'—' }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.date_of_buyback|date:'d.m.Y' }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.phone_number }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.comment_for_payback|default:'—' }}</td>
+          <td class="{% if item.is_refund %}bg-red{% elif item.is_frozen %}bg-dark-blue{% elif item.is_individual %}bg-blue{% endif %}">{{ item.student.summ_of_payback }}</td>
+          <td class="{% if item.school_name == "НУР" %}bg-nur{% elif item.school_name == "ДВИЖ" %}bg-dvizh{% elif item.is_no_category %}bg-gray{% endif %}">{{ item.student.school_name|default:'' }}</td>
+          <td class="{% if item.student.documents and item.school_name == "НУР" %}bg-nur{% elif item.student.documents and item.school_name == "ДВИЖ" %}bg-dvizh{% elif item.is_no_category %}bg-gray{% endif %}">{% if item.student.documents %}Есть{% endif %}</td>
+          <td class="{% if item.student.internal_examination and item.school_name == "НУР" %}bg-nur{% elif item.student.internal_examination and item.school_name == "ДВИЖ" %}bg-dvizh{% elif item.is_no_category %}bg-gray{% endif %}">{% if item.student.internal_examination %}Сдал{% endif %}</td>
+          <td class="{% if item.student.gai_examination and item.school_name == "НУР" %}bg-nur{% elif item.student.gai_examination and item.school_name == "ДВИЖ" %}bg-dvizh{% elif item.is_no_category %}bg-gray{% endif %}">{% if item.student.gai_examination %}Сдал{% endif %}</td>
+          <td>{{ item.student.transferred_the_certificate|default:'' }}</td>
+          <td>{{ item.student.first_visit_date|date:'d.m.Y'|default:'' }}</td>
+          <td>
+            <a href="{% url 'InternalAccounting:edit_student' item.student.pk %}" class="btn-edit">✏️ Редактировать</a>
+            <a href="{% url 'InternalAccounting:delete_student' item.student.pk %}" class="btn-delete-inline">🗑️ Удалить</a>
+          </td>
+          <td>{% if item.student.is_in_office %}✅{% else %}-{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="18" class="empty">Нет данных</td></tr>
+      {% endfor %}
+      
+      <tr class="totals-row_ADM">
+        <td></td><td></td><td></td>
+        <td>{{ total_hours_all }}</td>
+        <td>{{ total_rolled }}</td>
+        <td>{{ total_remaining }}</td>
+        <td colspan="15"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<style>
+  /* ... предыдущие стили ... */
+  .excel-table, .excel-table th, .excel-table td, .totals-row_ADM td {
+    font-family: Calibri, sans-serif;
+    font-size: 11pt;
+    border: 1px solid #000;
+    padding: 6px;
+    vertical-align: middle;
+  }
+  .excel-table th {
+    font-weight: bold;
+    text-align: center;
+    background-color: #f2f2f2;
+    height: 100px;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  .excel-table td { text-align: center; word-wrap: break-word; }
+
+  /* Ширина столбцов (оставим как есть) */
+  .excel-table colgroup col:nth-child(1)  { width: 80px;  }
+  .excel-table colgroup col:nth-child(2)  { width: 280px; }
+  .excel-table colgroup col:nth-child(3)  { width: 80px;  }
+  .excel-table colgroup col:nth-child(4)  { width: 80px;  }
+  .excel-table colgroup col:nth-child(5)  { width: 80px;  }
+  .excel-table colgroup col:nth-child(6)  { width: 80px;  }
+  .excel-table colgroup col:nth-child(7)  { width: 90px;  }
+  .excel-table colgroup col:nth-child(8)  { width: 120px; }
+  .excel-table colgroup col:nth-child(9)  { width: 400px; }
+  .excel-table colgroup col:nth-child(10) { width: 80px;  }
+  .excel-table colgroup col:nth-child(11) { width: 80px;  }
+  .excel-table colgroup col:nth-child(12) { width: 80px;  }
+  .excel-table colgroup col:nth-child(13) { width: 80px;  }
+  .excel-table colgroup col:nth-child(14) { width: 80px;  }
+  .excel-table colgroup col:nth-child(15) { width: 200px; }
+  .excel-table colgroup col:nth-child(16) { width: 90px;  }
+  .excel-table colgroup col:nth-child(17) { width: 120px; }
+  .excel-table colgroup col:nth-child(18) { width: 80px;  }
+
+  /* Цвета */
+  .bg-light-green { background-color: #00FF00 !important; }
+  .bg-blue        { background-color: #00FFFF !important; }
+  .bg-dark-blue   { background-color: #4A86E8 !important; }
+  .bg-red         { background-color: #FF0000 !important; }
+  .bg-gray        { background-color: #999999 !important; }
+  .bg-lilac       { background-color: #CCC0D9 !important; }
+  .bg-nur         { background-color: #00FF00 !important; }
+  .bg-dvizh       { background-color: #7030A0 !important; }
+
+  /* Кнопки */
+  .btn-year, .btn-filter, .btn-clear-inline {
+    padding: 4px 8px;
+    margin: 0 4px 4px 0;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .btn-year-active { background-color: #007bff; color: white; }
+
+  .btn-excel, .btn-add, .btn-refund {
+    padding: 6px 12px;
+    margin: 0 6px 6px 0;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .btn-excel { background-color: #28a745; color: white; }
+  .btn-add   { background-color: #17a2b8; color: white; }
+  .btn-refund{ background-color: #dc3545; color: white; }
+
+  .btn-apply {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  .btn-clear-inline {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+  }
+
+  .totals-row_ADM td {
+    background-color: #A64D79 !important;
+    font-weight: bold;
+  }
+
+  /* Фильтры */
+  .controls-year { margin-bottom: 15px; }
+  .btn-toggle-filters {
+    background-color: #e9ecef;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .advanced-filters {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 15px;
+  }
+  .advanced-filters.hidden { display: none; }
+  .filter-group {
+    margin-bottom: 10px;
+  }
+  .filter-group strong {
+    margin-right: 10px;
+    display: inline-block;
+    width: 140px;
+  }
+  .filter-group label {
+    margin-right: 15px;
+    cursor: pointer;
+  }
+  .numeric-filters input[type="number"] {
+    margin: 0 5px;
+  }
+  @media (max-width: 768px) {
+    .filter-group strong { width: auto; display: block; margin-bottom: 5px; }
+    .advanced-filters { padding: 10px; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggle-filters');
+    const filtersDiv = document.getElementById('advanced-filters');
+    
+    if (toggleBtn && filtersDiv) {
+      toggleBtn.addEventListener('click', function() {
+        filtersDiv.classList.toggle('hidden');
+        toggleBtn.textContent = filtersDiv.classList.contains('hidden') 
+          ? 'Показать фильтры ▼' 
+          : 'Скрыть фильтры ▲';
+      });
+    }
+  });
+</script>
+{% endblock %}
