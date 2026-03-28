@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 staticfiles/
 db.sqlite3
+.vscode
+tests/Тестирование_internal_accounting.xlsx
