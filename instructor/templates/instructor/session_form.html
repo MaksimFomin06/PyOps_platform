@@ -1,0 +1,275 @@
+{% extends 'base/base.html' %}
+{% block title %}Добавить занятие{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Добавить занятие</h1>
+    <a href="{% url 'instructor:session_list' %}" class="btn-back">← Назад к списку</a>
+  </div>
+
+  <form method="post" class="session-form" novalidate>
+    {% csrf_token %}
+    
+    <div class="form-section">
+      <h2>Направление</h2>
+      <div class="form-group">
+        <label for="{{ form.student_type.id_for_label }}">Тип группы *</label>
+        {{ form.student_type }}
+        {% if form.student_type.errors %}
+          <div class="error">{{ form.student_type.errors.0 }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Студент</h2>
+      <div class="form-group">
+        <label for="{{ form.student_search.id_for_label }}">Поиск студента *</label>
+        {{ form.student_search }}
+        <div id="student-search-results" class="search-results"></div>
+        {% if form.student_search.errors %}
+          <div class="error">{{ form.student_search.errors.0 }}</div>
+        {% endif %}
+      </div>
+      
+      {{ form.selected_student_id }}
+      {{ form.selected_child_id }}
+      
+      <div id="selected-student-info" class="student-info" style="display:none;">
+        <div class="info-card">
+          <h4 id="student-fio"></h4>
+          <p><strong>№ ведомости:</strong> <span id="student-statement"></span></p>
+          <p><strong>Курс:</strong> <span id="student-course"></span></p>
+          <p><strong>Часы:</strong> <span id="student-hours"></span> / <span id="student-rolled"></span> / <span id="student-remaining"></span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Детали занятия</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="{{ form.instructor.id_for_label }}">Инструктор *</label>
+          {{ form.instructor }}
+          {% if form.instructor.errors %}
+            <div class="error">{{ form.instructor.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.session_date.id_for_label }}">Дата занятия *</label>
+          {{ form.session_date }}
+          {% if form.session_date.errors %}
+            <div class="error">{{ form.session_date.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Часы занятия</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="{{ form.hours_count.id_for_label }}">Количество часов *</label>
+          {{ form.hours_count }}
+          <small class="form-text">От 1 до 10 часов</small>
+          {% if form.hours_count.errors %}
+            <div class="error">{{ form.hours_count.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.hour_times_display.id_for_label }}">Время занятий</label>
+          {{ form.hour_times_display }}
+          <small class="form-text">Автоматически генерируется</small>
+        </div>
+      </div>
+      {{ form.hour_times }}
+    </div>
+
+    <div class="form-section">
+      <h2>Комментарий</h2>
+      <div class="form-group">
+        <label for="{{ form.comment.id_for_label }}">Комментарий инструктора</label>
+        {{ form.comment }}
+        {% if form.comment.errors %}
+          <div class="error">{{ form.comment.errors.0 }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-save">Сохранить</button>
+      <a href="{% url 'instructor:session_list' %}" class="btn-cancel">Отмена</a>
+    </div>
+
+<div style="background: #ffebee; padding: 10px; margin: 20px 0; border: 1px solid #f44336;">
+    <strong>Отладка формы:</strong>
+    <pre>
+        student_type: {{ form.student_type.value|default:"—" }}
+        instructor: {{ form.instructor.value|default:"—" }}
+        session_date: {{ form.session_date.value|default:"—" }}
+        hours_count: {{ form.hours_count.value|default:"—" }}
+        selected_student_id: {{ form.selected_student_id.value|default:"—" }}
+        selected_child_id: {{ form.selected_child_id.value|default:"—" }}
+    </pre>
+</div>
+  </form>
+</div>
+
+<style>
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .btn-back { padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+  .form-section { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+  .form-section h2 { margin-top: 0; margin-bottom: 20px; color: #495057; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; }
+  .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-weight: bold; margin-bottom: 5px; color: #495057; }
+  .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,0.25); }
+  .form-text { color: #6c757d; font-size: 12px; margin-top: 5px; }
+  .error { color: #dc3545; font-size: 12px; margin-top: 5px; }
+  .search-results { position: absolute; background: white; border: 1px solid #dee2e6; border-radius: 4px; max-height: 300px; overflow-y: auto; z-index: 1000; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  .search-result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+  .search-result-item:hover { background: #f8f9fa; }
+  .search-result-item:last-child { border-bottom: none; }
+  .student-info { margin-top: 15px; }
+  .info-card { background: #e3f2fd; padding: 15px; border-radius: 6px; border: 1px solid #90caf9; }
+  .info-card h4 { margin-top: 0; color: #1976d2; }
+  .info-card p { margin: 5px 0; }
+  .form-actions { display: flex; gap: 10px; margin-top: 30px; }
+  .btn-save { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-size: 16px; }
+  @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+</style>
+<script>
+  const searchInput = document.getElementById('student-search-input');
+  const resultsDiv = document.getElementById('student-search-results');
+  const studentTypeSelect = document.getElementById('student-type-select');
+  const selectedStudentIdInput = document.getElementById('selected-student-id');
+  const selectedChildIdInput = document.getElementById('selected-child-id');
+  const studentInfoDiv = document.getElementById('selected-student-info');
+  
+  let searchTimeout;
+  let lastQuery = '';
+  
+  searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 1) {
+      resultsDiv.innerHTML = '';
+      studentInfoDiv.style.display = 'none';
+      selectedStudentIdInput.value = '';
+      selectedChildIdInput.value = '';
+      return;
+    }
+    
+    if (query === lastQuery) {
+      return;
+    }
+    lastQuery = query;
+    
+    searchTimeout = setTimeout(() => {
+      const studentType = studentTypeSelect.value;
+      
+      resultsDiv.innerHTML = '<div class="search-result-item">🔍 Поиск...</div>';
+      
+      fetch(`/instructor/ajax/search-student/?q=${encodeURIComponent(query)}&type=${studentType}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.results.length > 0) {
+            resultsDiv.innerHTML = data.results.map(student => `
+              <div class="search-result-item" onclick="selectStudent(${student.id}, '${student.fio.replace(/'/g, "\\'")}', '${student.statement_number.replace(/'/g, "\\'")}', '${student.course.replace(/'/g, "\\'")}', ${student.total_hours || 'null'}, ${student.rolled_hours}, ${student.remaining || 'null'}, '${student.type}')">
+                <strong>${student.fio}</strong><br>
+                <small>№${student.statement_number} | ${student.course} | ${student.remaining !== null ? student.remaining : '∞'}ч. ост.</small>
+              </div>
+            `).join('');
+          } else {
+            resultsDiv.innerHTML = '<div class="search-result-item">❌ Ничего не найдено</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Ошибка поиска:', err);
+          resultsDiv.innerHTML = '<div class="search-result-item">⚠️ Ошибка поиска</div>';
+        });
+    }, 300);
+  });
+  
+  function selectStudent(id, fio, statement, course, total, rolled, remaining, type) {
+    console.log('✅ Выбран студент:', { id, fio, type, statement });
+    
+    if (type === 'adult') {
+      selectedStudentIdInput.value = id;
+      selectedChildIdInput.value = '';
+    } else {
+      selectedChildIdInput.value = id;
+      selectedStudentIdInput.value = '';
+    }
+    
+    document.getElementById('student-fio').textContent = fio;
+    document.getElementById('student-statement').textContent = statement;
+    document.getElementById('student-course').textContent = course;
+    document.getElementById('student-hours').textContent = total !== null ? total : '∞';
+    document.getElementById('student-rolled').textContent = rolled;
+    document.getElementById('student-remaining').textContent = remaining !== null ? remaining : '∞';
+    
+    studentInfoDiv.style.display = 'block';
+    resultsDiv.innerHTML = '';
+    searchInput.value = `${statement} — ${fio}`;
+    
+    searchInput.style.borderColor = '#28a745';
+    searchInput.style.backgroundColor = '#d4edda';
+    setTimeout(() => {
+      searchInput.style.borderColor = '#ced4da';
+      searchInput.style.backgroundColor = 'white';
+    }, 1000);
+  }
+  
+  function updateHourTimes() {
+    const hoursCount = parseInt(document.getElementById('hours-count-input').value) || 1;
+    const times = [];
+    const startHour = 13;
+    
+    for (let i = 0; i < hoursCount; i++) {
+      const hour = startHour + i;
+      times.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+    
+    document.getElementById('hour-times-display').value = times.join(', ');
+    document.getElementById('hour-times-hidden').value = times.join(', ');
+  }
+  
+  updateHourTimes();
+  
+  document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+      resultsDiv.innerHTML = '';
+    }
+  });
+  
+  document.querySelector('.session-form').addEventListener('submit', function(e) {
+    const studentType = studentTypeSelect.value;
+    const selectedAdult = selectedStudentIdInput.value;
+    const selectedChild = selectedChildIdInput.value;
+    
+    if (studentType === 'adult' && !selectedAdult) {
+      e.preventDefault();
+      alert('⚠️ Выберите студента из выпадающего списка!\n\n1. Введите номер или ФИО\n2. Кликните на результат поиска');
+      searchInput.focus();
+      searchInput.style.borderColor = '#dc3545';
+      return false;
+    }
+    
+    if (studentType === 'child' && !selectedChild) {
+      e.preventDefault();
+      alert('⚠️ Выберите студента из выпадающего списка!\n\n1. Введите номер или ФИО\n2. Кликните на результат поиска');
+      searchInput.focus();
+      searchInput.style.borderColor = '#dc3545';
+      return false;
+    }
+  });
+</script>
+{% endblock %}

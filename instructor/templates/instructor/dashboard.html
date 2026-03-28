@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+{% block title %}Дашборд инструктора{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>📊 Дашборд</h1>
+  
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">{{ total_sessions }}</div>
+      <div class="stat-label">Всего занятий</div>
+    </div>
+    <div class="stat-card stat-warning">
+      <div class="stat-value">{{ pending_sessions }}</div>
+      <div class="stat-label">Ожидают подтверждения</div>
+    </div>
+    <div class="stat-card stat-success">
+      <div class="stat-value">{{ confirmed_today }}</div>
+      <div class="stat-label">Подтверждено сегодня</div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <h2>Сегодняшние занятия</h2>
+      {% if today_sessions %}
+        <ul class="session-list">
+          {% for session in today_sessions %}
+          <li>
+            <strong>{{ session.student_fio }}</strong> — 
+            {{ session.hours_count }}ч. — 
+            <span class="badge badge-{{ session.status }}">{{ session.get_status_display }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Нет занятий на сегодня</p>
+      {% endif %}
+    </div>
+
+    <div class="dashboard-card">
+      <h2>Ожидают подтверждения</h2>
+      {% if pending_list %}
+        <ul class="session-list">
+          {% for session in pending_list %}
+          <li>
+            <strong>{{ session.student_fio }}</strong> — 
+            {{ session.session_date|date:'d.m.Y' }} —
+            <a href="{% url 'instructor:confirm_session' session.pk %}" class="btn-confirm">✅</a>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Нет ожидающих</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <a href="{% url 'instructor:add_session' %}" class="btn-action">➕ Добавить занятие</a>
+    <a href="{% url 'instructor:session_list' %}" class="btn-action">📋 Все занятия</a>
+    <a href="{% url 'instructor:admin_panel' %}" class="btn-action btn-admin">🔧 Админ-панель</a>
+  </div>
+</div>
+
+<style>
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+  .stat-card { padding: 25px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; text-align: center; }
+  .stat-value { font-size: 36px; font-weight: bold; color: #007bff; }
+  .stat-label { color: #6c757d; margin-top: 5px; }
+  .stat-warning .stat-value { color: #ffc107; }
+  .stat-success .stat-value { color: #28a745; }
+  .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+  .dashboard-card { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; }
+  .dashboard-card h2 { margin-top: 0; margin-bottom: 15px; color: #495057; }
+  .session-list { list-style: none; padding: 0; }
+  .session-list li { padding: 10px; border-bottom: 1px solid #eee; }
+  .session-list li:last-child { border-bottom: none; }
+  .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+  .badge-pending { background: #ffc107; color: #000; }
+  .badge-confirmed { background: #28a745; color: white; }
+  .badge-rejected { background: #dc3545; color: white; }
+  .btn-confirm { text-decoration: none; }
+  .empty { color: #6c757d; font-style: italic; }
+  .action-buttons { display: flex; gap: 15px; }
+  .btn-action { padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+  @media (max-width: 768px) { .stats-row, .dashboard-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}

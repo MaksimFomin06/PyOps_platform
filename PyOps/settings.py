@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'encrypted_model_fields', 
     'main',
     'internal_accounting',
+    'instructor',
 ]
 
 MIDDLEWARE = [

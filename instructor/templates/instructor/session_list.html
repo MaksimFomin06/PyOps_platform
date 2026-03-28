@@ -1,0 +1,145 @@
+{% extends 'base/base.html' %}
+{% block title %}Журнал занятий{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>📋 Журнал занятий</h1>
+    <a href="{% url 'instructor:add_session' %}" class="btn-add">➕ Добавить занятие</a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card stat-total">
+      <div class="stat-value">{{ stats.total }}</div>
+      <div class="stat-label">Всего</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-value">{{ stats.pending }}</div>
+      <div class="stat-label">Ожидают</div>
+    </div>
+    <div class="stat-card stat-confirmed">
+      <div class="stat-value">{{ stats.confirmed }}</div>
+      <div class="stat-label">Подтверждено</div>
+    </div>
+    <div class="stat-card stat-rejected">
+      <div class="stat-value">{{ stats.rejected }}</div>
+      <div class="stat-label">Отклонено</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <form method="get" class="filters-form">
+      <div class="filter-row">
+        <select name="status" class="filter-select">
+          <option value="">Все статусы</option>
+          <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Ожидают</option>
+          <option value="confirmed" {% if current_status == 'confirmed' %}selected{% endif %}>Подтверждено</option>
+          <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Отклонено</option>
+        </select>
+        
+        <select name="instructor" class="filter-select">
+          <option value="">Все инструкторы</option>
+          <option value="1" {% if current_instructor == '1' %}selected{% endif %}>Инструктор 1</option>
+          <option value="2" {% if current_instructor == '2' %}selected{% endif %}>Инструктор 2</option>
+          <option value="3" {% if current_instructor == '3' %}selected{% endif %}>Инструктор 3</option>
+          <option value="4" {% if current_instructor == '4' %}selected{% endif %}>Инструктор 4</option>
+          <option value="5" {% if current_instructor == '5' %}selected{% endif %}>Инструктор 5</option>
+        </select>
+        
+        <select name="student_type" class="filter-select">
+          <option value="">Все направления</option>
+          <option value="adult" {% if current_student_type == 'adult' %}selected{% endif %}>Взрослые</option>
+          <option value="child" {% if current_student_type == 'child' %}selected{% endif %}>Дети</option>
+        </select>
+        
+        <input type="text" name="student_fio" value="{{ student_fio }}" placeholder="ФИО или №" class="filter-input">
+        
+        <button type="submit" class="btn-filter">Фильтр</button>
+        <a href="{% url 'instructor:session_list' %}" class="btn-clear">Сброс</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Дата</th>
+          <th>№</th>
+          <th>ФИО</th>
+          <th>Курс</th>
+          <th>Направление</th>
+          <th>Инструктор</th>
+          <th>Часы</th>
+          <th>Статус</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for session in sessions %}
+        <tr class="status-{{ session.status }}">
+          <td>{{ session.session_date|date:'d.m.Y' }}</td>
+          <td>{{ session.statement_number }}</td>
+          <td>{{ session.student_fio }}</td>
+          <td>{{ session.course_name }}</td>
+          <td>{{ session.get_student_type_display }}</td>
+          <td>
+          <a href="{% url 'instructor:instructor_sessions' session.instructor %}">
+            {{ session.get_instructor_display }}
+          </a>
+        </td>
+          <td>{{ session.hours_count }}ч.</td>
+          <td>
+            <span class="badge badge-{{ session.status }}">
+              {{ session.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'instructor:session_detail' session.pk %}" class="btn-icon">👁️</a>
+            {% if session.is_pending %}
+              <a href="{% url 'instructor:confirm_session' session.pk %}" class="btn-icon">✅</a>
+              <a href="{% url 'instructor:reject_session' session.pk %}" class="btn-icon">❌</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="empty">Нет данных</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .btn-add { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+  .stat-card { padding: 20px; border-radius: 6px; text-align: center; }
+  .stat-value { font-size: 32px; font-weight: bold; }
+  .stat-label { color: #6c757d; margin-top: 5px; }
+  .stat-total { background: #e3f2fd; }
+  .stat-pending { background: #fff3cd; }
+  .stat-confirmed { background: #d4edda; }
+  .stat-rejected { background: #f8d7da; }
+  .filters { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+  .filters-form { display: flex; }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-select, .filter-input { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; }
+  .btn-filter { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-clear { padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+  .table-wrapper { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6; }
+  .data-table th { background: #f8f9fa; font-weight: bold; }
+  .status-pending { background: #fff3cd; }
+  .status-confirmed { background: #d4edda; }
+  .status-rejected { background: #f8d7da; }
+  .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+  .badge-pending { background: #ffc107; color: #000; }
+  .badge-confirmed { background: #28a745; color: white; }
+  .badge-rejected { background: #dc3545; color: white; }
+  .btn-icon { margin: 0 2px; text-decoration: none; font-size: 14px; }
+  .empty { color: #6c757d; font-style: italic; text-align: center; }
+</style>
+{% endblock %}

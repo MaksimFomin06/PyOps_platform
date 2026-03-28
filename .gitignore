@@ -6,3 +6,4 @@ staticfiles/
 db.sqlite3
 .vscode
 tests/Тестирование_internal_accounting.xlsx
+Задачи.md

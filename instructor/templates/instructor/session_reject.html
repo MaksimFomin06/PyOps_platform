@@ -1,0 +1,60 @@
+{% extends 'base/base.html' %}
+{% block title %}Отклонение занятия{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="confirm-box">
+    <h1>❌ Отклонить занятие</h1>
+    
+    <div class="session-info">
+      <h2>Информация о занятии</h2>
+      <p><strong>Студент:</strong> {{ session.student_fio }}</p>
+      <p><strong>№ ведомости:</strong> {{ session.statement_number }}</p>
+      <p><strong>Курс:</strong> {{ session.course_name }}</p>
+      <p><strong>Дата занятия:</strong> {{ session.session_date|date:'d.m.Y' }}</p>
+      <p><strong>Инструктор:</strong> {{ session.get_instructor_display }}</p>
+      <p><strong>Часов:</strong> {{ session.hours_count }}</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="rejected_reason">Причина отклонения *</label>
+        <textarea id="rejected_reason" name="rejected_reason" rows="4" class="form-control" placeholder="Например: студент не пришел, ошибка в данных..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="rejected_by">Отклонил:</label>
+        <input type="text" id="rejected_by" name="rejected_by" value="Администратор" class="form-control" required>
+      </div>
+
+      <div class="alert-warning">
+        <strong>⚠️ Внимание!</strong> Занятие будет отклонено и не добавится к часам студента.
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-reject">❌ Отклонить занятие</button>
+        <a href="{% url 'instructor:session_list' %}" class="btn-cancel">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+  .confirm-box { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 30px; }
+  .confirm-box h1 { margin-top: 0; color: #dc3545; }
+  .session-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
+  .session-info h2 { margin-top: 0; margin-bottom: 15px; color: #495057; }
+  .session-info p { margin: 8px 0; }
+  .form-group { margin: 20px 0; }
+  .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+  .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; }
+  textarea.form-control { resize: vertical; }
+  .alert-warning { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; margin: 20px 0; }
+  .form-actions { display: flex; gap: 10px; margin-top: 30px; }
+  .btn-reject { padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-size: 16px; }
+</style>
+{% endblock %}

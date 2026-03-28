@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+{% block title %}Подтверждение занятия{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="confirm-box">
+    <h1>✅ Подтвердить занятие</h1>
+    
+    <div class="session-info">
+      <h2>Информация о занятии</h2>
+      <p><strong>Студент:</strong> {{ session.student_fio }}</p>
+      <p><strong>№ ведомости:</strong> {{ session.statement_number }}</p>
+      <p><strong>Курс:</strong> {{ session.course_name }}</p>
+      <p><strong>Дата занятия:</strong> {{ session.session_date|date:'d.m.Y' }}</p>
+      <p><strong>Инструктор:</strong> {{ session.get_instructor_display }}</p>
+      <p><strong>Часов:</strong> {{ session.hours_count }}</p>
+      <p><strong>Время:</strong> {{ session.hour_times|default:"—" }}</p>
+    </div>
+
+    <div class="hours-info">
+      <h3>⏱️ Часы студента</h3>
+      <p>До занятия: <strong>{{ session.rolled_back_hours_before }}</strong> ч.</p>
+      <p>После подтверждения: <strong>{{ session.rolled_back_hours_before|add:session.hours_count }}</strong> ч.</p>
+      {% if session.remaining_hours_after is not None %}
+        <p>Остаток: <strong>{{ session.remaining_hours_after }}</strong> ч.</p>
+      {% endif %}
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="confirmed_by">Подтвердил:</label>
+        <input type="text" id="confirmed_by" name="confirmed_by" value="Администратор" class="form-control" required>
+      </div>
+
+      <div class="alert-info">
+        <strong>⚠️ Внимание!</strong> После подтверждения часы будут добавлены студенту. Это действие нельзя отменить.
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-confirm">✅ Подтвердить занятие</button>
+        <a href="{% url 'instructor:session_list' %}" class="btn-cancel">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+  .confirm-box { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 30px; }
+  .confirm-box h1 { margin-top: 0; color: #28a745; }
+  .session-info, .hours-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; }
+  .session-info h2, .hours-info h3 { margin-top: 0; margin-bottom: 15px; color: #495057; }
+  .session-info p, .hours-info p { margin: 8px 0; }
+  .form-group { margin: 20px 0; }
+  .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+  .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; }
+  .alert-info { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 4px; margin: 20px 0; }
+  .form-actions { display: flex; gap: 10px; margin-top: 30px; }
+  .btn-confirm { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-size: 16px; }
+</style>
+{% endblock %}

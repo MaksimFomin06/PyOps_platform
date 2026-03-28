@@ -4,6 +4,8 @@
     <a href="{% url 'main:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">🏠 Главная</a>
     <a href="{% url 'internal_accounting:adult:student_list' %}" class="nav-link {% if 'adult' in request.path %}active{% endif %}">👨 Взрослые</a>
     <a href="{% url 'internal_accounting:child:student_list' %}" class="nav-link {% if 'child' in request.path %}active{% endif %}">👶 Дети</a>
+    <a href="{% url 'instructor:dashboard' %}" class="nav-link {% if 'instructor' in request.path %}active{% endif %}">🚗 Инструктор</a>
+    <a href="{% url 'instructor:admin_panel' %}" class="nav-link nav-admin">🔧 Админ</a>
   </div>
 </div>
 
@@ -17,6 +19,7 @@
   .header-links {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
   }
   
   .nav-link {
