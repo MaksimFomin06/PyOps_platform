@@ -1,0 +1,181 @@
+{% extends 'base/base.html' %}
+{% block title %}Взрослые студенты{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>👨 Взрослые студенты</h1>
+  <a href="{% url 'internal_accounting:child:student_list' %}" class="btn-switch">Перейти к детям 👶</a>
+</div>
+
+{% if unregistered_refunds %}
+  <div class="alert alert-warning">
+    <strong>⚠️ Незарегистрированные возвраты:</strong>
+    <ul>
+      {% for item in unregistered_refunds %}
+        <li>Ведомость <strong>{{ item.statement_number }}</strong> — {{ item.fio }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<!-- === Год === -->
+<div class="controls-year">
+  <strong>Год:</strong>
+  <a href="?year=all{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-year {% if current_year == 'all' %}btn-year-active{% endif %}">Все</a>
+  {% for y in all_years %}
+    <a href="?year={{ y }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn-year {% if current_year == y|stringformat:'s' %}btn-year-active{% endif %}">{{ y }}</a>
+  {% endfor %}
+</div>
+
+<!-- === Кнопки действий === -->
+<div class="action-buttons">
+  <a href="{% url 'internal_accounting:adult:export_excel' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}" class="btn-excel">📥 Excel</a>
+  <a href="{% url 'internal_accounting:adult:add_student' %}" class="btn-add">➕ Добавить</a>
+  <a href="{% url 'internal_accounting:adult:import_students' %}" class="btn-import">📤 Импорт</a>
+  <a href="{% url 'internal_accounting:adult:refund_add' %}" class="btn-refund">💰 Возврат</a>
+</div>
+
+<!-- === Таблица === -->
+<div class="table-wrapper">
+  <table class="excel-table">
+    <thead>
+      <tr>
+        <th><a href="?sort={% if current_sort == '-statement_number' %}statement_number{% else %}-statement_number{% endif %}">№</a></th>
+        <th><a href="?sort={% if current_sort == '-fio' %}fio{% else %}-fio{% endif %}">ФИО</a></th>
+        <th><a href="?sort={% if current_sort == '-course_name' %}course_name{% else %}-course_name{% endif %}">Курс</a></th>
+        <th>Дата покупки</th>
+        <th>Телефон</th>
+        <th>Сумма</th>
+        <th>Школа</th>
+        <th>Первое посещение</th>
+        <th>Действия</th>
+        <th>В офисе</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in students_with_flags %}
+        <tr class="{% if item.is_refund %}row-refund{% elif item.is_individual %}row-individual{% endif %}">
+          <td>{{ item.student.statement_number }}</td>
+          <td>
+            <a href="{% url 'internal_accounting:adult:student_detail' item.student.pk %}" class="student-link">{{ item.student.fio }}</a>
+          </td>
+          <td>{{ item.student.course_name }}</td>
+          <td>{{ item.student.date_of_buyback|date:'d.m.Y' }}</td>
+          <td>{{ item.student.phone_number }}</td>
+          <td>{{ item.student.summ_of_payback }} ₽</td>
+          <td class="school-{{ item.student.school_name|lower }}">{{ item.student.school_name|default:'—' }}</td>
+          <td>{{ item.student.first_visit_date|date:'d.m.Y'|default:'—' }}</td>
+          <td>
+            <a href="{% url 'internal_accounting:adult:edit_student' item.student.pk %}" class="btn-icon" title="Редактировать">✏️</a>
+            <a href="{% url 'internal_accounting:adult:student_visits' item.student.pk %}" class="btn-icon" title="Посещения">📋</a>
+            <a href="{% url 'internal_accounting:adult:delete_student' item.student.pk %}" class="btn-icon" title="Удалить">🗑️</a>
+          </td>
+          <td>{% if item.student.is_in_office %}✅{% else %}—{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="10" class="empty">Нет данных</td></tr>
+      {% endfor %}
+      
+      <tr class="totals-row">
+        <td colspan="3">Итого:</td>
+        <td>{{ total_hours_all }} ч.</td>
+        <td>{{ total_rolled }} ч.</td>
+        <td>{{ total_remaining }} ч.</td>
+        <td colspan="4"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .btn-switch {
+    padding: 8px 16px;
+    background: #6f42c1;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+  }
+  
+  .excel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Calibri, sans-serif;
+    font-size: 11pt;
+  }
+  
+  .excel-table th, .excel-table td {
+    border: 1px solid #000;
+    padding: 6px;
+    text-align: center;
+  }
+  
+  .excel-table th {
+    background: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .student-link {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .student-link:hover { text-decoration: underline; }
+  
+  .row-refund { background: #ffebee; }
+  .row-individual { background: #e3f2fd; }
+  
+  .school-nur { background: #00FF00; }
+  .school-dvizh { background: #7030A0; color: white; }
+  
+  .btn-icon {
+    margin: 0 2px;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .totals-row {
+    background: #A64D79 !important;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .action-buttons {
+    margin: 15px 0;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-excel, .btn-add, .btn-import, .btn-refund {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+  }
+  .btn-excel { background: #28a745; }
+  .btn-add { background: #17a2b8; }
+  .btn-import { background: #fd7e14; }
+  .btn-refund { background: #dc3545; }
+  
+  .controls-year { margin-bottom: 15px; }
+  
+  .btn-year {
+    padding: 4px 8px;
+    margin: 0 4px 4px 0;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .btn-year-active { background: #007bff; color: white; }
+  
+  .empty { color: #6c757d; font-style: italic; }
+</style>
+{% endblock %}

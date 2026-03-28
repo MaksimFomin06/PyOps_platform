@@ -1,0 +1,38 @@
+{% extends 'base/base.html' %}
+{% block title %}Удаление{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>⚠️ Подтверждение удаления</h1>
+  
+  <div class="student-info">
+    <p><strong>ФИО:</strong> {{ student.fio }}</p>
+    <p><strong>Курс:</strong> {{ student.course_name }}</p>
+    <p><strong>№:</strong> {{ student.statement_number }}</p>
+    {% if student.parent_name %}
+    <p><strong>Родитель:</strong> {{ student.parent_name }}</p>
+    {% endif %}
+  </div>
+  
+  <div class="alert-warning">
+    <strong>Внимание!</strong> Это действие нельзя отменить.
+  </div>
+  
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      <button type="submit" class="btn-delete">🗑️ Удалить</button>
+      <a href="{% url 'internal_accounting:child:student_list' %}" class="btn-cancel">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .student-info { background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
+  .alert-warning { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-delete { padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+</style>
+{% endblock %}

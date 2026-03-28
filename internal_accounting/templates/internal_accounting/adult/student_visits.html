@@ -1,0 +1,27 @@
+{% extends 'base/base.html' %}
+{% block title %}Посещения — {{ student.fio }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>📋 История посещений</h1>
+  
+  <div class="student-info">
+    <h2>{{ student.fio }}</h2>
+    <p><strong>Курс:</strong> {{ student.course_name }}</p>
+    <p><strong>Часы:</strong> {{ student.rolled_back_hours }} / {{ student.total_hours|default:'∞' }}</p>
+  </div>
+
+  <div class="placeholder">
+    <h3>🚧 В разработке</h3>
+    <p>Здесь будет история посещений студента.</p>
+    <a href="{% url 'internal_accounting:adult:student_detail' student.pk %}" class="btn-back">← Назад</a>
+  </div>
+</div>
+
+<style>
+  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+  .student-info { background: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+  .placeholder { text-align: center; padding: 50px; background: #fff3cd; border-radius: 6px; }
+  .btn-back { display: inline-block; margin-top: 20px; padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+</style>
+{% endblock %}

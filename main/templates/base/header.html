@@ -1,21 +1,39 @@
 {% load static %}
 <div class="main-header">
-  {% comment %} {% if user.is_authenticated %}
-    {% endcomment %}
-    <div class="header-links">
-      <a href="{% url 'main:home' %}">Главная</a>
-    </div>
-    {% comment %}
-  {% endif %} {% endcomment %}
-  {% comment %} <div class="header-auth">
-    {% if user.is_authenticated %}
-      <span class="user-info">Профиль: <strong>{{ user.get_full_name|default:user.username }}</strong></span>
-      <form method="post" action="{% url 'logout' %}" class="logout-form">
-        {% csrf_token %}
-        <button type="submit" class="btn-logout">Выйти</button>
-      </form>
-    {% else %}
-      <a href="{% url 'login' %}" class="btn-login">Войти</a>
-    {% endif %}
-  </div> {% endcomment %}
+  <div class="header-links">
+    <a href="{% url 'main:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">🏠 Главная</a>
+    <a href="{% url 'internal_accounting:adult:student_list' %}" class="nav-link {% if 'adult' in request.path %}active{% endif %}">👨 Взрослые</a>
+    <a href="{% url 'internal_accounting:child:student_list' %}" class="nav-link {% if 'child' in request.path %}active{% endif %}">👶 Дети</a>
+  </div>
 </div>
+
+<style>
+  .main-header {
+    background: #2c3e50;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+  }
+  
+  .header-links {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .nav-link {
+    color: #ecf0f1;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+  
+  .nav-link:hover {
+    background: #34495e;
+  }
+  
+  .nav-link.active {
+    background: #3498db;
+    color: white;
+    font-weight: bold;
+  }
+</style>

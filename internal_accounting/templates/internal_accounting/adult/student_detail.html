@@ -1,0 +1,99 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ student.fio }} — Карточка{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>{{ student.fio }}</h1>
+    <div class="header-actions">
+      <a href="{% url 'internal_accounting:adult:student_list' %}" class="btn-back">← Назад</a>
+      <a href="{% url 'internal_accounting:adult:edit_student' student.pk %}" class="btn-edit">✏️</a>
+      <a href="{% url 'internal_accounting:adult:refund_add' %}?student_id={{ student.pk }}" class="btn-refund">💰</a>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h2>📋 Информация</h2>
+    <div class="info-grid">
+      <div class="info-item"><label>№:</label><span>{{ student.statement_number }}</span></div>
+      <div class="info-item"><label>Год:</label><span>{{ student.statement_year }}</span></div>
+      <div class="info-item"><label>Курс:</label><span>{{ student.course_name }}</span></div>
+      <div class="info-item"><label>Телефон:</label><span>{{ student.phone_number }}</span></div>
+      <div class="info-item"><label>Школа:</label><span>{{ student.school_name|default:'—' }}</span></div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h2>⏱️ Часы</h2>
+    <div class="hours-grid">
+      <div class="hours-card"><div class="hours-value">{{ student.total_hours|default:'—' }}</div><div>Всего</div></div>
+      <div class="hours-card"><div class="hours-value">{{ student.rolled_back_hours }}</div><div>Откатано</div></div>
+      <div class="hours-card"><div class="hours-value">{{ remaining_hours|default:'—' }}</div><div>Остаток</div></div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h2>💰 Финансы</h2>
+    <div class="info-grid">
+      <div class="info-item"><label>Платёж:</label><span>{{ student.summ_of_payback }} ₽</span></div>
+      <div class="info-item"><label>Возврат:</label><span>{{ student.summ_of_refund }} ₽</span></div>
+    </div>
+    {% if student.comment_for_payback %}
+    <div class="comment">{{ student.comment_for_payback }}</div>
+    {% endif %}
+  </div>
+
+  <div class="info-section">
+    <h2>📝 Статусы</h2>
+    <div class="status-grid">
+      <div class="status-item">В офисе: {% if student.is_in_office %}✅{% else %}❌{% endif %}</div>
+      <div class="status-item">Документы: {% if student.documents %}✅{% else %}❌{% endif %}</div>
+      <div class="status-item">Внутр. экзамен: {% if student.internal_examination %}✅{% else %}❌{% endif %}</div>
+      <div class="status-item">ГАИ: {% if student.gai_examination %}✅{% else %}❌{% endif %}</div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h2>💸 Возвраты</h2>
+    {% if refunds %}
+      <table class="refunds-table">
+        <thead><tr><th>Дата</th><th>Сумма</th><th>Комментарий</th></tr></thead>
+        <tbody>
+          {% for refund in refunds %}
+          <tr>
+            <td>{{ refund.date_of_refund|date:'d.m.Y' }}</td>
+            <td>{{ refund.summ_of_refund }} ₽</td>
+            <td>{{ refund.comment_for_refund|default:'—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">Нет возвратов</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  .page-header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn-back, .btn-edit, .btn-refund { padding: 8px 16px; border-radius: 4px; text-decoration: none; color: white; }
+  .btn-back { background: #6c757d; }
+  .btn-edit { background: #ffc107; color: #000; }
+  .btn-refund { background: #28a745; }
+  .info-section { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+  .info-section h2 { margin-top: 0; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; }
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+  .info-item label { display: block; font-size: 12px; color: #6c757d; }
+  .hours-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .hours-card { text-align: center; padding: 20px; background: #e3f2fd; border-radius: 6px; }
+  .hours-value { font-size: 32px; font-weight: bold; }
+  .comment { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; white-space: pre-wrap; }
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .refunds-table { width: 100%; border-collapse: collapse; }
+  .refunds-table th, .refunds-table td { padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6; }
+  .refunds-table th { background: #f8f9fa; }
+  .empty { color: #6c757d; font-style: italic; }
+</style>
+{% endblock %}

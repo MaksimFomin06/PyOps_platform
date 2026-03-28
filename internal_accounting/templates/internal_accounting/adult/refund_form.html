@@ -1,0 +1,50 @@
+{% extends 'base/base.html' %}
+{% block title %}Возврат средств{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>💰 Возврат средств</h1>
+  
+  {% if student %}
+  <div class="student-summary">
+    <p><strong>Студент:</strong> {{ student.fio }}</p>
+    <p><strong>Курс:</strong> {{ student.course_name }}</p>
+  </div>
+  {% endif %}
+  
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Студент *</label>
+      {{ form.student }}
+    </div>
+    <div class="form-group">
+      <label>Сумма *</label>
+      {{ form.summ_of_refund }}
+    </div>
+    <div class="form-group">
+      <label>Дата *</label>
+      {{ form.date_of_refund }}
+    </div>
+    <div class="form-group">
+      <label>Комментарий</label>
+      {{ form.comment_for_refund }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-save">💾 Сохранить</button>
+      <a href="{% url 'internal_accounting:adult:student_list' %}" class="btn-cancel">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .student-summary { background: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+  .form-actions { display: flex; gap: 10px; }
+  .btn-save { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+</style>
+{% endblock %}

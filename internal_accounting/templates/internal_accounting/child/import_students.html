@@ -1,0 +1,39 @@
+{% extends 'base/base.html' %}
+{% block title %}Импорт{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>📥 Импорт детских студентов</h1>
+  
+  <div class="import-info">
+    <h3>Требования к файлу:</h3>
+    <ul>
+      <li>Формат: .xlsx или .xls</li>
+      <li>Обязательные поля: ФИО, Телефон, Курс, Сумма</li>
+      <li>Рекомендуемые поля: Родитель, Дата покупки</li>
+    </ul>
+  </div>
+  
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Файл *</label>
+      <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-import">📥 Импортировать</button>
+      <a href="{% url 'internal_accounting:child:student_list' %}" class="btn-cancel">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .import-info { background: #e3f2fd; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+  .form-actions { display: flex; gap: 10px; }
+  .btn-import { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+</style>
+{% endblock %}

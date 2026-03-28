@@ -1,0 +1,141 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{{ title }}</h1>
+  
+  <!-- 🔴 Вывод общих ошибок формы -->
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+  
+  <form method="post" class="student-form" novalidate>
+    {% csrf_token %}
+    
+    <div class="form-section">
+      <h2>📋 Основная информация</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="{{ form.fio.id_for_label }}">ФИО *</label>
+          {{ form.fio }}
+          {% if form.fio.errors %}
+            <div class="error">{{ form.fio.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.phone_number.id_for_label }}">Телефон *</label>
+          {{ form.phone_number }}
+          {% if form.phone_number.errors %}
+            <div class="error">{{ form.phone_number.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.course_name.id_for_label }}">Курс *</label>
+          {{ form.course_name }}
+          {% if form.course_name.errors %}
+            <div class="error">{{ form.course_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.school_name.id_for_label }}">Школа</label>
+          {{ form.school_name }}
+          {% if form.school_name.errors %}
+            <div class="error">{{ form.school_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>⏱️ Часы</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="{{ form.total_hours.id_for_label }}">Всего часов</label>
+          {{ form.total_hours }}
+          {% if form.total_hours.errors %}
+            <div class="error">{{ form.total_hours.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.rolled_back_hours.id_for_label }}">Откатано</label>
+          {{ form.rolled_back_hours }}
+          {% if form.rolled_back_hours.errors %}
+            <div class="error">{{ form.rolled_back_hours.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>💰 Финансы</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="{{ form.summ_of_payback.id_for_label }}">Сумма платежа *</label>
+          {{ form.summ_of_payback }}
+          {% if form.summ_of_payback.errors %}
+            <div class="error">{{ form.summ_of_payback.errors.0 }}</div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.date_of_buyback.id_for_label }}">Дата покупки</label>
+          {{ form.date_of_buyback }}
+          {% if form.date_of_buyback.errors %}
+            <div class="error">{{ form.date_of_buyback.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>📝 Статусы</h2>
+      <div class="checkbox-group">
+        <label>{{ form.documents }} Документы</label>
+        <label>{{ form.internal_examination }} Внутр. экзамен</label>
+        <label>{{ form.gai_examination }} ГАИ</label>
+        <label>{{ form.is_in_office }} В офисе</label>
+        <label>{{ form.is_manually_closed }} Закрыта вручную</label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-save">💾 Сохранить</button>
+      <a href="{% url 'internal_accounting:adult:student_list' %}" class="btn-cancel">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .form-section { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+  .form-section h2 { margin-top: 0; }
+  .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-weight: bold; margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea { 
+    padding: 8px; 
+    border: 1px solid #ced4da; 
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+  }
+  .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+  .checkbox-group label { display: flex; align-items: center; gap: 10px; font-weight: normal; }
+  .error { color: #dc3545; font-size: 12px; margin-top: 5px; }
+  .alert-danger { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+  .form-actions { display: flex; gap: 10px; }
+  .btn-save { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-cancel { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+</style>
+{% endblock %}
